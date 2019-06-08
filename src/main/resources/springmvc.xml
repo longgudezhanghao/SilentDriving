@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!--AOP配置begin-->
+    <context:annotation-config/>
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <context:component-scan base-package="com.dzf.advice"/>
+    <!--AOP配置end-->
+
+    <!--文件上传解析器
+        id必须要为multipartResolver，已经写死了
+    -->
+    <bean id="multipartResolver"  class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+
+        <property name="maxUploadSize" value="20000000000000000"/>
+        <!--指定上传的编码？-->
+        <property name="defaultEncoding" value="UTF_8"/>
+
+        <property name="maxUploadSizePerFile" value="20000000000000"/>
+
+    </bean>
+
+    <!--servlet3.0,跟上面功能一样，配置上传设置需要到web.xml里面设置,与全注解开发模式有关 -->
+    <!--<bean id="multipartResolver"   class="org.springframework.web.multipart.support.StandardServletMultipartResolver">-->
+    <!---->
+    <!--</bean>-->
+
+
+    <!--默认的servlet处理者-->
+    <!--只加它一个，相当于全部都给它处理-->
+    <mvc:default-servlet-handler/>
+    <mvc:annotation-driven/>
+    <!--通过映射自定义映射关系-->
+    <!--<mvc:resources mapping="/static/css/*" location="static/css/"/>-->
+</beans>
