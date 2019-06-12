@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dzf.mapper.MapLocationMapper">
-    <insert id="storeLocation" useGeneratedKeys="true" keyProperty="id" keyColumn="id" parameterType="com.dzf.pojo.Location">
-        insert into storelocation(id,lng,lat)
-        values (#{id},#{lng},#{lat})
-        ON DUPLICATE KEY UPDATE
-        lng = #{lng},
-        lat = #{lat}
-    </insert>
+    <update id="storeLocation" parameterType="com.dzf.pojo.Location">
+        update person
+        set lat = #{lat},lng = #{lng}
+        where id = #{id}
+    </update>
 
     <select id="showOtherLocations" resultType="com.dzf.pojo.Location">
-        SELECT *from storelocation
+        SELECT lng,lat,id from person
         <where>
             <if test="id != null">
                 id != #{id}
@@ -19,11 +17,20 @@
     </select>
 
     <insert id="storelocationinrange" parameterType="com.dzf.pojo.Location">
-        insert into storelocationinrange(id,lng,lat)
-        values (#{id},#{lng},#{lat})
+        insert into otherslocation(userID,id,lng,lat)
+        values (#{userID},#{id},#{lng},#{lat})
     </insert>
 
     <delete id="deletelocations">
-         delete from storelocationinrange
+         delete from otherslocation
     </delete>
 </mapper>
+
+
+<!--<insert id="storeLocation" useGeneratedKeys="true" keyProperty="id" keyColumn="id" parameterType="com.dzf.pojo.Location">-->
+<!--        insert into storelocation(id,lng,lat)-->
+<!--        values (#{id},#{lng},#{lat})-->
+<!--        ON DUPLICATE KEY UPDATE-->
+<!--        lng = #{lng},-->
+<!--        lat = #{lat}-->
+<!--</insert>-->

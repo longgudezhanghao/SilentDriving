@@ -8,6 +8,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
+    <title>WebSocket Connection Page</title>
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
     <style type="text/css">
@@ -27,9 +31,66 @@
 </head>
 <body>
 <div id="allmap"></div>
+</div>
 </body>
 </html>
 <script type="text/javascript">
+
+    window.onload = function () {
+        var userCd = "<%=request.getSession().getAttribute("USER_CD") %>";
+        if (userCd != null && userCd != "null") {
+            alert("登录成功");
+            // 登录成功后，建立websocket连接
+            connect();
+        }
+    }
+
+    var ws = null;
+    var target = 'ws://localhost:8080/s/myHandler';
+
+    // 创建WebSocket连接
+    function connect() {
+
+        // WebSocket适配
+
+        //此处有点类似向后台发起请求的意思，后台将会对此请求拦截并进行一系列处理
+        ws = new WebSocket(target);
+
+        // 注入连接事件
+        ws.onopen = function () {
+            //echo();
+            alert('连接已建立。');
+        };
+
+        // 注入消息事件
+        ws.onmessage = function (event) {
+            alert('您的消息：' + event.data);
+        };
+        // 注入断开事件
+        ws.onclose = function (event) {
+            alert('连接已断开。');
+            disconnect();
+        };
+    }
+
+    // 断开连接,自定义函数
+    function disconnect() {
+        if (ws != null) {
+            ws.close();
+            ws = null;
+        }
+    }
+
+    // 发送消息，作为被调用函数
+    function echo(otherID) {
+        alert(otherID);
+        if (ws != null) {
+            ws.send(otherID+"号，请快点走！");
+        } else {
+            alert('connection not established, please connect.');
+        }
+    }
+
     // 创建地图map和其他元素
     var map = new BMap.Map("allmap");
     var point = new BMap.Point(113.114171, 27.824301);
@@ -45,59 +106,13 @@
     //地图控件end
     map.enableScrollWheelZoom();   //启用滚轮放大缩小，默认禁用
     map.enableContinuousZoom();    //启用地图惯性拖拽，默认禁用
-    var points = [];       //储存其他车辆点的位置
+    var markers = [];       //储存其他车辆点的位置
     var circle;             //以用户为中心的一个圆形区域，用来确认距离
     var mylng;          //用户位置全局lng
     var mylat;          //用户位置全局lat
-    var id = '12';      //用户id
-    idint = parseInt(id);//将用户id转换成int类型，便于传入后台
-    var pointI;
-    var e;
-    var mk;
-
-    //地图定位
-    var geolocation = new BMap.Geolocation();
-    x();
-    function x() {
-        setInterval(function () {
-            geolocation.getCurrentPosition(function (r) {
-                if (this.getStatus() == BMAP_STATUS_SUCCESS) {
-                    pointI = r.point;
-                    mk = new BMap.Marker(r.point);
-                    mk.setAnimation(BMAP_ANIMATION_BOUNCE);
-                    mylng = r.point.lng;
-                    mylat = r.point.lat;
-                    map.addOverlay(mk);
-                    map.panTo(r.point);
-                    e = confirm('您的位置：' + r.point.lng + ',' + r.point.lat);
-                } else {
-                    alert('failed' + this.getStatus());
-                }
-            }, {enableHighAccuracy: true, maximumAge: 0})
-        },10*1000)
-    }
-
-    function ControlsCreate(e,pointI) {
-        circle = new BMap.Circle(pointI, 10000, {
-            fillColor: "blue",
-            strokeWeight: 1,
-            fillOpacity: 0.3,
-            strokeOpacity: 0.3
-        });
-        map.addOverlay(circle);
-        if (e == true) {
-            // 创建所有控件begin
-            var myZoomCtrl = new ZoomControl();
-            map.addControl(myZoomCtrl);
-            var myZoomCtrl2 = new ZoomControl2();
-            map.addControl(myZoomCtrl2);
-            var myZoomCtrl3 = new ZoomControl3();
-            map.addControl(myZoomCtrl3);
-            //创建控件end
-        } else {
-            console.log("bad behaviour!")
-        }
-    }
+    var m = true;
+    var em = true;
+    var mk = new BMap.Marker();//当前用户的全局标注
 
     //控件1设置begin
     // 定义一个控件类,即function
@@ -125,7 +140,8 @@
             var obj = {
                 'lng': mylng,
                 'lat': mylat,
-                'id': idint
+                'id':${userID}
+
             };
             $.ajax({
                 url: '${ctx}/map/storelocation',
@@ -160,14 +176,20 @@
         //将从后台接受到的数据展示在前台
         div2.onclick = function (e) {
             $.ajax({
-                url: '${ctx}/map/search?id=' + idint,
+                url: '${ctx}/map/search?id=' + ${userID},
                 type: 'get',
                 success: function (data) {
-                    points.splice(0, points.length);
+                    markers.splice(0, markers.length);
+                    map.clearOverlays();
                     for (var i = 0; i < data.length; i++) {
                         var point = new BMap.Point(data[i].lng, data[i].lat);
-                        points.push(point);
                         var marker = new BMap.Marker(point);// 创建标注
+                        markers.push(marker);
+                        marker.setTitle(data[i].id);
+                        var title = data[i].id;
+                        marker.addEventListener("click",function (e) {
+                            echo(title);
+                        });
                         map.addOverlay(marker);// 将标注添加到地图中
                     }
                 }
@@ -193,14 +215,16 @@
         div3.style.backgroundColor = "blue";
         //找出范围内车辆
         div3.onclick = function (e) {
-            for (var i = 0; i < points.length; i++) {
+            for (var i = 0; i < markers.length; i++) {
                 var number = 0;
-                var point = points[i];
+                var marker = markers[i];
+                var point = marker.getPosition();
                 if (BMapLib.GeoUtils.isPointInCircle(point, circle)) {
                     var obj = {
                         'lng': point.lng,
                         'lat': point.lat,
-                        'id': idint
+                        'id': marker.getTitle(),
+                        'userID':${userID}
                     }
                     $.ajax({
                         url: '${ctx}/map/storelocationinrange',
@@ -221,6 +245,69 @@
         return div3;
     }
     //创建控件3end
+
+    //地图定位
+    var geolocation = new BMap.Geolocation();
+    function x() {
+        //
+        setInterval(function () {
+            geolocation.getCurrentPosition(function (r) {
+                if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+
+                    map.removeOverlay(mk);
+
+                    var pointI = r.point;
+                    mk = new BMap.Marker(r.point);
+                    mylng = r.point.lng;
+                    mylat = r.point.lat;
+                    map.addOverlay(mk);
+                    mk.setAnimation(BMAP_ANIMATION_BOUNCE);
+                    mk.setTitle(${userID});
+                    mk.addEventListener("click",function (e) {
+                        echo(${userID});
+                    });
+                    map.panTo(r.point);
+                    //此处while循环是保持confirm只会运行一次，里面的while也是，em，m定义在全局
+                    while(em == true) {
+                        e = confirm(mylng + " " + mylat);
+                        if (e == true) {
+                            while (m == true) {
+                                circle = new BMap.Circle(pointI, 10000, {
+                                    fillColor: "blue",
+                                    strokeWeight: 1,
+                                    fillOpacity: 0.3,
+                                    strokeOpacity: 0.3
+                                });
+                                circle.disableMassClear();
+                                map.addOverlay(circle);
+                                m = false;
+                            }
+                        }
+                        em = false;
+                    }
+                } else {
+                    alert('failed' + this.getStatus());
+                }
+            },
+                {enableHighAccuracy: true, maximumAge: 0})
+        },2*1000);
+        //
+        ControlsCreate();
+    }
+
+    //所有控件的创建
+    function ControlsCreate() {
+            // 创建所有控件begin
+            var myZoomCtrl = new ZoomControl();
+            map.addControl(myZoomCtrl);
+            var myZoomCtrl2 = new ZoomControl2();
+            map.addControl(myZoomCtrl2);
+            var myZoomCtrl3 = new ZoomControl3();
+            map.addControl(myZoomCtrl3);
+            //创建控件end
+    }
+    
+    x();
 
 </script>
 

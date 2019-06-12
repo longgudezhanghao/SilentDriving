@@ -27,6 +27,9 @@ public class MapLocationController {
     @RequestMapping(value = "/storelocationinrange",method = RequestMethod.POST)
     public void storelocationinrange(@RequestBody Location location){
 
+        System.out.println(location);
+        System.out.println(location.getUserID());
+
         mapLocationservice.deletelocations();
         mapLocationservice.storelocationinrange(location);
 

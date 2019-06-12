@@ -18,4 +18,9 @@ public class PersonServiceImp implements PersonService {
         personMapper.registerPeople(person);
 
     }
+
+    @Override
+    public Integer selectPerson(String name, String password) {
+        return personMapper.selectPerson(name,password);
+    }
 }

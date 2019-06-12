@@ -1,6 +1,15 @@
 package com.dzf.pojo;
 
 public class Location {
+    private  Integer userID;
+
+    public Integer getUserID() {
+        return userID;
+    }
+
+    public void setUserID(Integer userID) {
+        this.userID = userID;
+    }
 
     private Integer id;
 

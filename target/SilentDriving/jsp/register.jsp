@@ -6,6 +6,7 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.io.*,java.util.*" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -91,6 +92,23 @@
         //监听提交
         form.on('submit(formDemo)', function(person){
             layer.msg("注册成功，欢迎您使用SilentDriving！");
+            //此处两个ajax有先后顺序触发，详情请自寻查找
+            $.ajaxSetup({
+                complete : function(XMLHttpRequest, textStatus) {
+                    // 通过XMLHttpRequest取得响应头，REDIRECT
+                    var redirect = XMLHttpRequest.getResponseHeader("REDIRECT");//若HEADER中含有REDIRECT说明后端想重定向
+                    if (redirect == "REDIRECT") {
+                        var win = window;
+                        while (win != win.top){
+                            win = win.top;
+                        }
+
+                        win.location.href= XMLHttpRequest.getResponseHeader("CONTEXTPATH");
+
+                    }
+                }
+            });
+
             $.ajax({
                 url: '${ctx}/register',
                 type: 'post',
@@ -99,10 +117,12 @@
                 success: function (data) {
 
                 }
-            })
+            });
             return false;
         });
     });
+
 </script>
+
 </body>
 </html>

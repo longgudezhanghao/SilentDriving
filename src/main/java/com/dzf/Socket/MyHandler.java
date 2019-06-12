@@ -23,9 +23,12 @@ public class MyHandler extends TextWebSocketHandler implements Serializable{
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         //功能：接受客户端传来的数据 (  websocket.send()  );
         super.handleTextMessage(session, message);
-        TextMessage returnMessage = new TextMessage(message.getPayload()+" received at server");
+        TextMessage returnMessage = new TextMessage(message.getPayload());
         //将数据传给指定的客户端通过自定义方法sendMessageToUser();
-        sendMessageToUser("zhoukaixin",returnMessage);
+        //将指定的id分割提取出来
+        String a = returnMessage.getPayload();
+        String[] b = a.split("号");
+        sendMessageToUser(b[0],returnMessage);
     }
 
     @Override
@@ -86,7 +89,7 @@ public class MyHandler extends TextWebSocketHandler implements Serializable{
     }
  
     /**
-     * 发消息（无论是否在线）
+     * 发消息（在线）
      *
      * @param userCd
      * @param message
@@ -94,7 +97,7 @@ public class MyHandler extends TextWebSocketHandler implements Serializable{
     //都是利用相对应的（user的websocketsession）的sendMessage(message)方法进行通信,与客户端的onmesage function()相对应
     public void sendMessageToUser(String userCd, TextMessage message) {
         for (WebSocketSession user : users) {
-            if (userCd.equals(user.getAttributes().get("WS_USER_CD"))) { // 应从session取CD对比
+            if (userCd.equals(user.getAttributes().get("USER_CD"))) { // 应从session取CD对比
                 try {
                     if (user.isOpen()) {
                         user.sendMessage(message);

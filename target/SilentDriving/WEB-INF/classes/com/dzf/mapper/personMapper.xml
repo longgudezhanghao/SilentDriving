@@ -6,4 +6,9 @@
         insert into person(name, sex, age, hobby,password, city)
         values (#{name},#{sex},#{age},#{hobby},#{password},#{city})
     </insert>
+
+    <select id="selectPerson" resultType="java.lang.Integer">
+        select id from person
+        where  name = #{name} and password = #{password}
+    </select>
 </mapper>
