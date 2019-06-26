@@ -23,7 +23,7 @@ public class LoginController {
         return "login";
     }
 
-    @RequestMapping("reallogin")
+    @RequestMapping("/reallogin")
     public String reallogin(Person person, HttpServletResponse httpServletResponse, Model model,HttpServletRequest request){
 
         Integer userID = personService.selectPerson(person.getName(),person.getPassword());

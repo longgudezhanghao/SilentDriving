@@ -28,7 +28,7 @@
 </head>
 <body>
 <div class="login">
-    <form class="layui-form" action="${ctx}/reallogin">
+    <form class="layui-form" action="${ctx}/real login">
         <div class="layui-form-item">
             <label class="layui-form-label">姓名</label>
             <div class="layui-input-inline">
